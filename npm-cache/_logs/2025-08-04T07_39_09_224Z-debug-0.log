@@ -1,0 +1,13 @@
+0 verbose cli D:\Node\node.exe D:\Node\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.8.2
+2 info using node@v20.18.0
+3 silly config load:file:D:\Node\node_modules\npm\npmrc
+4 silly config load:file:D:\File VS code\Coze_workflow_test\.npmrc
+5 silly config load:file:C:\Users\FU Qianchen\.npmrc
+6 silly config load:file:D:\Node\node_global\etc\npmrc
+7 verbose title npm run dev
+8 verbose argv "run" "dev"
+9 verbose logfile logs-max:10 dir:D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T07_39_09_224Z-
+10 verbose logfile D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T07_39_09_224Z-debug-0.log
+11 silly logfile start cleaning logs, removing 2 files
+12 silly logfile done cleaning log files
