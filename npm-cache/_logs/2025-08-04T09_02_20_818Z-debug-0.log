@@ -7,8 +7,8 @@
 6 silly config load:file:D:\Node\node_global\etc\npmrc
 7 verbose title npm config get registry
 8 verbose argv "config" "get" "registry"
-9 verbose logfile logs-max:10 dir:D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T07_28_22_903Z-
-10 verbose logfile D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T07_28_22_903Z-debug-0.log
+9 verbose logfile logs-max:10 dir:D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T09_02_20_818Z-
+10 verbose logfile D:\File VS code\Coze_workflow_test\npm-cache\_logs\2025-08-04T09_02_20_818Z-debug-0.log
 11 verbose cwd D:\File VS code\Coze_workflow_test
 12 verbose os Windows_NT 10.0.22631
 13 verbose node v20.18.0

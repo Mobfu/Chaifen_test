@@ -20,9 +20,70 @@ export default function ArticleSplitTest() {
   })
 
   const splitArticleMutation = trpc.articleSplit.splitArticle.useMutation()
+  const [result, setResult] = useState<any>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 检查是否是积分不足错误，如果是则使用模拟数据
+    if (splitArticleMutation.error?.message?.includes('Insufficient coze credits')) {
+      // 使用模拟数据
+      const mockResult = {
+        success: true,
+        data: {
+          code: 0,
+          data: JSON.stringify({
+            output: [
+              {
+                frenchTranslation: "L'intelligence artificielle (IA) est une branche de l'informatique",
+                story: "人工智能（Artificial Intelligence，AI）是计算机科学的一个分支"
+              },
+              {
+                frenchTranslation: "qui tente de comprendre l'essence de l'intelligence",
+                story: "它企图了解智能的实质"
+              },
+              {
+                frenchTranslation: "et de produire une nouvelle forme de machine intelligente",
+                story: "并生产出一种新的智能机器"
+              },
+              {
+                frenchTranslation: "capable de réagir de manière similaire à l'intelligence humaine",
+                story: "能够以类似人类智能的方式做出反应"
+              },
+              {
+                frenchTranslation: "Les recherches dans ce domaine incluent la robotique",
+                story: "该领域的研究包括机器人"
+              },
+              {
+                frenchTranslation: "la reconnaissance vocale, la reconnaissance d'images",
+                story: "语音识别、图像识别"
+              },
+              {
+                frenchTranslation: "le traitement du langage naturel et les systèmes experts",
+                story: "自然语言处理和专家系统等"
+              }
+            ]
+          }),
+          debug_url: "https://www.coze.cn/work_flow?execute_id=mock&space_id=mock&workflow_id=mock&execute_mode=2",
+          msg: "Success (Mock Data)",
+          usage: {
+            input_count: form.article.length,
+            output_count: 1500,
+            token_count: 2000
+          }
+        },
+        input: {
+          articleName: form.articleName,
+          articleLength: form.article.length,
+        }
+      }
+      
+      // 直接设置结果
+      splitArticleMutation.reset()
+      setResult(mockResult)
+      return
+    }
+    
     splitArticleMutation.mutate({
       article: form.article,
       articleName: form.articleName
@@ -132,12 +193,19 @@ export default function ArticleSplitTest() {
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
               <p className="text-red-800 font-medium">错误</p>
               <p className="text-red-600 text-sm">{splitArticleMutation.error.message}</p>
+              {splitArticleMutation.error.message.includes('Insufficient coze credits') && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-yellow-800 text-sm">
+                    💡 提示：由于积分不足，您可以点击"开始处理"按钮查看模拟效果
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
-          {splitArticleMutation.data && (
+          {(splitArticleMutation.data || result) && (
             <div className="mt-6">
-              <ArticleSplitResult result={splitArticleMutation.data} />
+              <ArticleSplitResult result={splitArticleMutation.data || result} />
             </div>
           )}
         </div>
@@ -175,44 +243,61 @@ function ArticleSplitResult({ result }: { result: any }) {
       }
     }
     
-    // 查找output数组
-    const findOutputArray = (obj: any): Segment[] => {
-      console.log('findOutputArray called with:', typeof obj, obj)
+    // 直接查找output数组
+    console.log('Looking for output in parsedData:', typeof parsedData, Object.keys(parsedData))
+    
+    // 检查parsedData.data字段（如果存在）
+    if (parsedData && typeof parsedData === 'object' && parsedData.data) {
+      console.log('Found data field in parsedData')
+      let dataContent = parsedData.data
       
+      // 如果data是字符串，尝试解析
+      if (typeof dataContent === 'string') {
+        try {
+          console.log('Parsing data field string')
+          dataContent = JSON.parse(dataContent)
+          console.log('Successfully parsed data field')
+        } catch (e) {
+          console.error('Failed to parse data field:', e)
+        }
+      }
+      
+      // 在解析后的data中查找output
+      if (dataContent && typeof dataContent === 'object' && dataContent.output && Array.isArray(dataContent.output)) {
+        console.log('Found output array in data field:', dataContent.output.length, 'items')
+        const segments = dataContent.output.filter((item: any) => 
+          item && typeof item === 'object' && 'story' in item && 'frenchTranslation' in item
+        )
+        console.log('Filtered segments:', segments.length)
+        return segments as Segment[]
+      }
+    }
+    
+    // 如果上面的方法失败，尝试直接在parsedData中查找output
+    if (parsedData && typeof parsedData === 'object' && parsedData.output && Array.isArray(parsedData.output)) {
+      console.log('Found output array directly:', parsedData.output.length, 'items')
+      const segments = parsedData.output.filter((item: any) => 
+        item && typeof item === 'object' && 'story' in item && 'frenchTranslation' in item
+      )
+      console.log('Filtered segments:', segments.length)
+      return segments as Segment[]
+    }
+    
+    // 如果直接查找失败，尝试递归查找
+    const findOutputArray = (obj: any): Segment[] => {
       if (Array.isArray(obj)) {
-        console.log('Found array with length:', obj.length)
-        // 检查是否是包含story和frenchTranslation的对象数组
         if (obj.length > 0 && obj[0] && typeof obj[0] === 'object' && 'story' in obj[0] && 'frenchTranslation' in obj[0]) {
-          console.log('Found segments array with', obj.length, 'segments')
           return obj as Segment[]
         }
-        // 递归查找
         for (const item of obj) {
           const result = findOutputArray(item)
           if (result.length > 0) return result
         }
       } else if (obj && typeof obj === 'object') {
-        console.log('Found object with keys:', Object.keys(obj))
-        // 查找output字段
         if (obj.output && Array.isArray(obj.output)) {
-          console.log('Found output field')
           return findOutputArray(obj.output)
         }
-        // 查找content字段中的output
-        if (obj.content && typeof obj.content === 'string') {
-          try {
-            const contentObj = JSON.parse(obj.content)
-            if (contentObj.output && Array.isArray(contentObj.output)) {
-              console.log('Found output in content field')
-              return findOutputArray(contentObj.output)
-            }
-          } catch (e) {
-            console.log('Failed to parse content field')
-          }
-        }
-        // 递归查找所有字段
-        for (const [key, value] of Object.entries(obj)) {
-          console.log('Searching field:', key)
+        for (const value of Object.values(obj)) {
           const result = findOutputArray(value)
           if (result.length > 0) return result
         }
