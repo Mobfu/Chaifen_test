@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { trpc } from '../../utils/trpc'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -21,9 +21,17 @@ export default function ArticleSplitTest() {
 
   const splitArticleMutation = trpc.articleSplit.splitArticle.useMutation()
   const [result, setResult] = useState<any>(null)
+  const [processingTime, setProcessingTime] = useState<number | null>(null)
+
+  const [startTime, setStartTime] = useState<number | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 记录开始时间
+    const currentStartTime = Date.now()
+    setStartTime(currentStartTime)
+    setProcessingTime(null)
     
     // 检查是否是积分不足错误，如果是则使用模拟数据
     if (splitArticleMutation.error?.message?.includes('Insufficient coze credits')) {
@@ -78,6 +86,11 @@ export default function ArticleSplitTest() {
         }
       }
       
+      // 计算处理时间
+      const endTime = Date.now()
+      const processingTimeMs = endTime - currentStartTime
+      setProcessingTime(processingTimeMs)
+      
       // 直接设置结果
       splitArticleMutation.reset()
       setResult(mockResult)
@@ -90,6 +103,16 @@ export default function ArticleSplitTest() {
     })
   }
 
+  // 监听mutation状态变化来计算处理时间
+  useEffect(() => {
+    if (splitArticleMutation.isSuccess && startTime && !processingTime) {
+      const endTime = Date.now()
+      const processingTimeMs = endTime - startTime
+      setProcessingTime(processingTimeMs)
+      setStartTime(null)
+    }
+  }, [splitArticleMutation.isSuccess, startTime, processingTime])
+
   const handleReset = () => {
     setForm({
       article: `人工智能（Artificial Intelligence，AI）是计算机科学的一个分支，它企图了解智能的实质，并生产出一种新的能以人类智能相似的方式做出反应的智能机器。该领域的研究包括机器人、语言识别、图像识别、自然语言处理和专家系统等。
@@ -100,6 +123,8 @@ export default function ArticleSplitTest() {
       articleName: '人工智能介绍'
     })
     splitArticleMutation.reset()
+    setResult(null)
+    setProcessingTime(null)
   }
 
   return (
@@ -205,7 +230,7 @@ export default function ArticleSplitTest() {
 
           {(splitArticleMutation.data || result) && (
             <div className="mt-6">
-              <ArticleSplitResult result={splitArticleMutation.data || result} />
+              <ArticleSplitResult result={splitArticleMutation.data || result} processingTime={processingTime} />
             </div>
           )}
         </div>
@@ -214,7 +239,7 @@ export default function ArticleSplitTest() {
   )
 }
 
-function ArticleSplitResult({ result }: { result: any }) {
+function ArticleSplitResult({ result, processingTime }: { result: any; processingTime?: number | null }) {
   const [activeTab, setActiveTab] = useState<'summary' | 'segments' | 'raw'>('summary')
 
   interface Segment {
@@ -328,6 +353,9 @@ function ArticleSplitResult({ result }: { result: any }) {
             <p>• 文章名字: {result.input.articleName}</p>
             <p>• 原文长度: {result.input.articleLength} 字符</p>
             <p>• 预计处理时间: 5分钟</p>
+            {processingTime && (
+              <p>• 实际处理时间: {(processingTime / 1000).toFixed(2)} 秒</p>
+            )}
           </div>
         </div>
 
@@ -371,7 +399,7 @@ function ArticleSplitResult({ result }: { result: any }) {
       <div className="bg-white rounded-md p-4 min-h-[400px]">
         {activeTab === 'summary' && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-green-50 p-3 rounded-md">
                 <h5 className="font-medium text-green-800">段落数量</h5>
                 <p className="text-2xl font-bold text-green-600">{segments.length}</p>
@@ -386,6 +414,12 @@ function ArticleSplitResult({ result }: { result: any }) {
                 <h5 className="font-medium text-purple-800">状态</h5>
                 <p className="text-2xl font-bold text-purple-600">完成</p>
               </div>
+              {processingTime && (
+                <div className="bg-orange-50 p-3 rounded-md">
+                  <h5 className="font-medium text-orange-800">处理时间</h5>
+                  <p className="text-2xl font-bold text-orange-600">{(processingTime / 1000).toFixed(2)}s</p>
+                </div>
+              )}
             </div>
             
             <div className="bg-yellow-50 p-3 rounded-md">
