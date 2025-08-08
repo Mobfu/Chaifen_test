@@ -1,7 +1,7 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "functions": {
-      "server/routers/articleSplit.ts": {
+      "src/pages/api/trpc/articleSplit.ts": {
         "maxDuration": 300
       }
     }
