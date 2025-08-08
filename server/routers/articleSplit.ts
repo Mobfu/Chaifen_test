@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { router, publicProcedure, articleSplitInputSchema } from '../trpc'
 import { CozeAPI } from '@coze/api'
 
+export const maxDuration = 300;
 export const articleSplitRouter = router({
   splitArticle: publicProcedure
     .input(articleSplitInputSchema)
