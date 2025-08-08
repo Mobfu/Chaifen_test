@@ -1,0 +1,8 @@
+{
+    "functions": {
+      "src/pages/api/trpc/articleSplit.ts": {
+        "maxDuration": 300
+      }
+    }
+  }
+  
